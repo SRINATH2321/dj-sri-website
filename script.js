@@ -3,6 +3,77 @@
    ============================================ */
 
 document.addEventListener('DOMContentLoaded', () => {
+  // === CUSTOM CURSOR ===
+  const cursorDot = document.querySelector('.cursor-dot');
+  const cursorOutline = document.querySelector('.cursor-outline');
+
+  if (cursorDot && cursorOutline && window.matchMedia("(pointer: fine)").matches) {
+    let mouseX = window.innerWidth / 2;
+    let mouseY = window.innerHeight / 2;
+    let outlineX = mouseX;
+    let outlineY = mouseY;
+
+    // Ensure cursor is hidden initially to prevent flashing at 0,0
+    cursorDot.style.opacity = '0';
+    cursorOutline.style.opacity = '0';
+
+    window.addEventListener('mousemove', (e) => {
+      cursorDot.style.opacity = '1';
+      cursorOutline.style.opacity = '1';
+      mouseX = e.clientX;
+      mouseY = e.clientY;
+      cursorDot.style.left = `${mouseX}px`;
+      cursorDot.style.top = `${mouseY}px`;
+    });
+
+    const animateCursor = () => {
+      let distX = mouseX - outlineX;
+      let distY = mouseY - outlineY;
+      
+      outlineX = outlineX + (distX * 0.15);
+      outlineY = outlineY + (distY * 0.15);
+      
+      cursorOutline.style.left = `${outlineX}px`;
+      cursorOutline.style.top = `${outlineY}px`;
+      
+      requestAnimationFrame(animateCursor);
+    };
+    animateCursor();
+
+    const addHoverLinks = () => {
+      const interactives = document.querySelectorAll('a, button, .gallery-item, input, select, textarea');
+      interactives.forEach(el => {
+        el.addEventListener('mouseenter', () => cursorOutline.classList.add('hover-state'));
+        el.addEventListener('mouseleave', () => cursorOutline.classList.remove('hover-state'));
+      });
+    };
+    addHoverLinks();
+    
+    // Call addHoverLinks again after dynamic content or setup if needed
+    setTimeout(addHoverLinks, 1000); 
+  }
+
+  // === 3D CARD TILT EFFECT ===
+  const cards = document.querySelectorAll('.service-card, .testimonial-card');
+  cards.forEach(card => {
+    card.addEventListener('mousemove', (e) => {
+      const rect = card.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      
+      const centerX = rect.width / 2;
+      const centerY = rect.height / 2;
+      
+      const rotateX = ((y - centerY) / centerY) * -10; // Max 10 deg
+      const rotateY = ((x - centerX) / centerX) * 10;
+      
+      card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.02, 1.02, 1.02)`;
+    });
+    
+    card.addEventListener('mouseleave', () => {
+      card.style.transform = `perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)`;
+    });
+  });
 
   // === NAVBAR SCROLL EFFECT ===
   const navbar = document.getElementById('navbar');
@@ -214,59 +285,102 @@ document.addEventListener('DOMContentLoaded', () => {
   // === GALLERY LIGHTBOX ===
   const lightbox = document.getElementById('lightbox');
   const lightboxImg = document.getElementById('lightboxImg');
+  const lightboxVideo = document.getElementById('lightboxVideo');
   const lightboxClose = document.getElementById('lightboxClose');
   const lightboxPrev = document.getElementById('lightboxPrev');
   const lightboxNext = document.getElementById('lightboxNext');
-  const galleryItems = document.querySelectorAll('.gallery-item');
-  let currentImageIndex = 0;
-  const galleryImages = [];
+  const galleryGrid = document.getElementById('galleryGrid');
+  
+  let currentMediaIndex = 0;
+  let galleryMedia = []; // Array of objects: { type: 'image'|'video', src: '...' }
 
-  galleryItems.forEach((item, index) => {
-    const img = item.querySelector('img');
-    galleryImages.push(img.src);
+  const updateGalleryData = () => {
+    const items = document.querySelectorAll('.gallery-item');
+    galleryMedia = Array.from(items).map(item => ({
+      type: item.getAttribute('data-type') || 'image',
+      src: item.getAttribute('data-src') || item.querySelector('img').src,
+      title: item.querySelector('h4')?.textContent || '',
+      desc: item.querySelector('p')?.textContent || ''
+    }));
 
-    item.addEventListener('click', () => {
-      currentImageIndex = index;
-      openLightbox();
+    // Add click events to items
+    items.forEach((item, index) => {
+      // Remove old listeners if any (simple way is to clone and replace, but here we just re-add)
+      item.onclick = () => {
+        currentMediaIndex = index;
+        openLightbox();
+      };
     });
-  });
+  };
+
+  // Initial update
+  updateGalleryData();
 
   const openLightbox = () => {
-    lightboxImg.src = galleryImages[currentImageIndex];
-    lightbox.classList.add('active');
+    const media = galleryMedia[currentMediaIndex];
+    if (!media) return;
+
+    // Reset media
+    lightboxImg.style.display = 'none';
+    lightboxVideo.style.display = 'none';
+    lightboxVideo.pause();
+    lightboxVideo.src = '';
+
+    if (media.type === 'video') {
+      lightbox.className = 'lightbox active mode-video';
+      lightboxVideo.src = media.src;
+      lightboxVideo.style.display = 'block';
+      lightboxVideo.play().catch(e => console.log("Auto-play blocked"));
+    } else {
+      lightbox.className = 'lightbox active mode-image';
+      lightboxImg.src = media.src;
+      lightboxImg.style.display = 'block';
+    }
+
     document.body.style.overflow = 'hidden';
   };
 
   const closeLightbox = () => {
     lightbox.classList.remove('active');
+    lightboxVideo.pause();
+    lightboxVideo.src = '';
     document.body.style.overflow = '';
   };
 
   lightboxClose.addEventListener('click', closeLightbox);
   
   lightbox.addEventListener('click', (e) => {
-    if (e.target === lightbox) closeLightbox();
+    if (e.target === lightbox || e.target === document.querySelector('.lightbox-content-wrapper')) {
+      closeLightbox();
+    }
   });
+
+  const navigateLightbox = (direction) => {
+    if (galleryMedia.length === 0) return;
+    currentMediaIndex = (currentMediaIndex + direction + galleryMedia.length) % galleryMedia.length;
+    openLightbox();
+  };
 
   lightboxPrev.addEventListener('click', (e) => {
     e.stopPropagation();
-    currentImageIndex = (currentImageIndex - 1 + galleryImages.length) % galleryImages.length;
-    lightboxImg.src = galleryImages[currentImageIndex];
+    navigateLightbox(-1);
   });
 
   lightboxNext.addEventListener('click', (e) => {
     e.stopPropagation();
-    currentImageIndex = (currentImageIndex + 1) % galleryImages.length;
-    lightboxImg.src = galleryImages[currentImageIndex];
+    navigateLightbox(1);
   });
 
   // Keyboard navigation
   document.addEventListener('keydown', (e) => {
     if (!lightbox.classList.contains('active')) return;
     if (e.key === 'Escape') closeLightbox();
-    if (e.key === 'ArrowLeft') lightboxPrev.click();
-    if (e.key === 'ArrowRight') lightboxNext.click();
+    if (e.key === 'ArrowLeft') navigateLightbox(-1);
+    if (e.key === 'ArrowRight') navigateLightbox(1);
   });
+
+  // Export refresh function for dynamic updates
+  window.refreshGallery = updateGalleryData;
 
   // === TESTIMONIALS CAROUSEL ===
   const track = document.getElementById('testimonialTrack');

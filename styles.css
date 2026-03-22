@@ -77,6 +77,55 @@ h1, h2, h3, h4, h5, h6 {
   line-height: 1.2;
 }
 
+/* === CUSTOM CURSOR === */
+@media (pointer: fine) {
+  body, a, button, select, input, textarea, .gallery-item {
+    cursor: none !important;
+  }
+}
+
+.cursor-dot,
+.cursor-outline {
+  position: fixed;
+  top: 0;
+  left: 0;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  z-index: 9999;
+  pointer-events: none;
+  display: none;
+}
+
+@media (pointer: fine) {
+  .cursor-dot,
+  .cursor-outline {
+    display: block;
+  }
+}
+
+.cursor-dot {
+  width: 8px;
+  height: 8px;
+  background-color: var(--accent-cyan);
+  box-shadow: var(--glow-cyan);
+}
+
+.cursor-outline {
+  width: 40px;
+  height: 40px;
+  border: 2px solid var(--accent-purple);
+  box-shadow: var(--glow-purple);
+  transition: width 0.2s ease, height 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.cursor-outline.hover-state {
+  width: 60px;
+  height: 60px;
+  background-color: rgba(181, 55, 242, 0.1);
+  border-color: rgba(233, 30, 140, 0.6);
+  box-shadow: var(--glow-pink);
+}
+
 /* === Utility Classes === */
 .container {
   max-width: 1200px;
@@ -125,6 +174,36 @@ h1, h2, h3, h4, h5, h6 {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  background-size: 200% auto;
+  animation: gradientFlow 4s linear infinite;
+}
+
+@keyframes gradientFlow {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes neonPulse {
+  0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% {
+    text-shadow: 0 0 10px rgba(255,255,255,0.3), 0 0 20px rgba(255,255,255,0.3), 0 0 30px var(--accent-purple), 0 0 40px var(--accent-purple);
+  }
+  20%, 24%, 55% {
+    text-shadow: none;
+  }
+}
+
+.hero-title {
+  animation: neonPulse 5s infinite;
+}
+
+.nav-brand-text span {
+  background: var(--gradient-main);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  background-size: 200% auto;
+  animation: gradientFlow 4s linear infinite;
 }
 
 .btn {
@@ -245,9 +324,11 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .navbar.scrolled {
-  background: rgba(10, 10, 15, 0.92);
-  backdrop-filter: blur(20px);
-  border-bottom: 1px solid var(--border-subtle);
+  background: rgba(10, 10, 15, 0.5);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
   padding: 12px 0;
 }
 
@@ -589,17 +670,33 @@ h1, h2, h3, h4, h5, h6 {
   overflow: hidden;
   position: relative;
   box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  background: var(--bg-card);
+  height: 400px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.about-image img {
-  width: 100%;
-  height: 400px;
+.about-image-placeholder {
+  font-size: 5rem;
+  opacity: 0.2;
+  filter: grayscale(1);
+}
+
+.about-image img.rotate-landscape {
+  transform: rotate(-90deg);
+  width: 600px;
+  height: 600px;
+  max-width: none;
   object-fit: cover;
-  transition: transform var(--transition-slow);
 }
 
 .about-image:hover img {
   transform: scale(1.05);
+}
+
+.about-image:hover img.rotate-landscape {
+  transform: rotate(-90deg) scale(1.05);
 }
 
 .about-image::after {
@@ -700,14 +797,17 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .service-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border-subtle);
+  background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.01) 100%);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border: 1px solid rgba(255,255,255,0.08);
   border-radius: var(--radius-lg);
   padding: 36px 28px;
   text-align: center;
   transition: all var(--transition-medium);
   position: relative;
   overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
 }
 
 .service-card::before {
@@ -778,6 +878,28 @@ h1, h2, h3, h4, h5, h6 {
   grid-template-columns: repeat(4, 1fr);
   grid-auto-rows: 250px;
   gap: 16px;
+  min-height: 400px;
+  position: relative;
+}
+
+.gallery-empty-state {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 60px;
+  background: var(--bg-card);
+  border: 2px dashed var(--border-subtle);
+  border-radius: var(--radius-lg);
+  color: var(--text-secondary);
+}
+
+.gallery-empty-state p {
+  font-size: 1.1rem;
+  margin-bottom: 20px;
+  opacity: 0.7;
 }
 
 .gallery-item {
@@ -785,6 +907,11 @@ h1, h2, h3, h4, h5, h6 {
   border-radius: var(--radius-md);
   overflow: hidden;
   cursor: pointer;
+  display: none; /* Hidden by default, shown when content exists */
+}
+
+.gallery-item.visible-item {
+  display: block;
 }
 
 .gallery-item:nth-child(1) {
@@ -792,15 +919,27 @@ h1, h2, h3, h4, h5, h6 {
   grid-row: span 2;
 }
 
-.gallery-item img {
+.gallery-item img,
+.gallery-item video {
   width: 100%;
   height: 100%;
   object-fit: cover;
   transition: transform var(--transition-slow);
 }
 
-.gallery-item:hover img {
+.gallery-item img.rotate-landscape {
+  transform: rotate(-90deg) scale(1.5);
+  width: 100%;
+  height: 100%;
+}
+
+.gallery-item:hover img,
+.gallery-item:hover video {
   transform: scale(1.1);
+}
+
+.gallery-item:hover img.rotate-landscape {
+  transform: rotate(-90deg) scale(1.6);
 }
 
 .gallery-overlay {
@@ -851,6 +990,15 @@ h1, h2, h3, h4, h5, h6 {
   transform: translate(-50%, -50%) scale(1);
 }
 
+.gallery-item.video .view-icon::after {
+  content: '▶';
+  margin-left: 3px;
+}
+
+.gallery-item.image .view-icon::after {
+  content: '🔍';
+}
+
 /* Lightbox */
 .lightbox {
   position: fixed;
@@ -869,11 +1017,30 @@ h1, h2, h3, h4, h5, h6 {
   animation: fadeIn 0.3s ease;
 }
 
-.lightbox img {
+.lightbox-content-wrapper {
+  position: relative;
   max-width: 90%;
+  max-height: 85vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lightbox img,
+.lightbox video {
+  max-width: 100%;
   max-height: 85vh;
   border-radius: var(--radius-md);
   box-shadow: 0 20px 80px rgba(0,0,0,0.5);
+  display: none;
+}
+
+.lightbox.mode-image img {
+  display: block;
+}
+
+.lightbox.mode-video video {
+  display: block;
 }
 
 .lightbox-close {
@@ -1470,5 +1637,50 @@ h1, h2, h3, h4, h5, h6 {
   
   .contact-form-wrapper {
     padding: 24px;
+  }
+}
+
+/* === WHATSAPP FLOATING BUTTON === */
+.whatsapp-float {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  background-color: #25d366;
+  color: white;
+  border-radius: 50px;
+  padding: 12px 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+  font-size: 1rem;
+  box-shadow: 0 4px 15px rgba(37, 211, 102, 0.4);
+  z-index: 1000;
+  transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease;
+  text-decoration: none;
+}
+
+.whatsapp-float svg {
+  width: 24px;
+  height: 24px;
+}
+
+.whatsapp-float:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 6px 20px rgba(37, 211, 102, 0.6);
+  background-color: #1ebe57;
+  color: white;
+}
+
+@media (max-width: 768px) {
+  .whatsapp-float {
+    bottom: 20px;
+    right: 20px;
+    padding: 12px;
+    border-radius: 50%;
+  }
+  
+  .whatsapp-float span {
+    display: none;
   }
 }
